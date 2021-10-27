@@ -1,0 +1,53 @@
+@import "../index.less";
+
+@search-height: 35px;
+
+.search-container {
+    display: flex;
+    flex-direction: column;
+    margin-left: 30px;
+    margin-right: 30px;
+    margin-top: 5px;
+    height: 100%;
+}
+
+.search-location {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.search-bar {
+    display: flex;
+    width: 100%;
+    outline: var(--search-text) 2px;
+}
+
+.search-box {
+    border: none;
+    width: 100%;
+    height: @search-height;
+    background-color: var(--search-color);
+    color: var(--search-text);
+    font-size: 25px;
+    font-family: "Maven Pro", sans-serif;
+}
+
+.search-box::placeholder {
+    color: var(--search-text);
+    font-size: 25px;
+    font-family: "Maven Pro", sans-serif;
+}
+
+.search-button {
+    user-select: none;
+    border: none;
+    cursor: pointer;
+    height: @search-height;
+    width: @search-height;
+}
+
+.search-button-img {
+    width: @search-height;
+    height: @search-height;
+}

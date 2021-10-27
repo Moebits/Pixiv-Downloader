@@ -1,15 +1,181 @@
-import {app, BrowserWindow, dialog, globalShortcut, ipcMain, shell} from "electron"
+import {app, BrowserWindow, dialog, globalShortcut, ipcMain, shell, session} from "electron"
 import {autoUpdater} from "electron-updater"
 import Store from "electron-store"
 import path from "path"
 import process from "process"
 import "./dev-app-update.yml"
 import pack from "./package.json"
+import Pixiv, {PixivIllust} from "pixiv.ts"
+import unzip from "unzipper"
+import functions from "./structures/functions"
+import imageSize from "image-size"
+import axios from "axios"
+import fs from "fs"
 
 process.setMaxListeners(0)
 let window: Electron.BrowserWindow | null
 autoUpdater.autoDownload = false
 const store = new Store()
+
+const active: Array<{id: number, dest: string, frameFolder?: string, action: null | "kill"}> = []
+
+ipcMain.handle("get-dimensions", async (event, url: string) => {
+  const arrayBuffer = await axios.get(url, {responseType: "arraybuffer", headers: {Referer: "https://www.pixiv.net/"}}).then((r) => r.data)
+  const dimensions = imageSize(arrayBuffer)
+  return {width: dimensions.width, height: dimensions.height}
+})
+
+ipcMain.handle("preview", (event, image: string) => {
+  window?.webContents.send("preview", image)
+})
+
+ipcMain.handle("update-color", (event, color: string) => {
+  window?.webContents.send("update-color", color)
+})
+
+ipcMain.handle("trigger-paste", () => {
+  window?.webContents.send("trigger-paste")
+})
+
+ipcMain.handle("delete-all", () => {
+  window?.webContents.send("delete-all")
+})
+
+ipcMain.handle("clear-all", () => {
+  window?.webContents.send("clear-all")
+})
+
+ipcMain.handle("delete-download", async (event, id: number) => {
+  let dest = ""
+  let frameFolder = ""
+  let index = active.findIndex((a) => a.id === id)
+  if (index !== -1) {
+    dest = active[index].dest
+    frameFolder = active[index].frameFolder ?? ""
+    active[index].action = "kill"
+  }
+  if (dest || frameFolder) {
+    let error = true
+    while ((frameFolder ? fs.existsSync(dest) && fs.existsSync(frameFolder) : fs.existsSync(dest)) && error) {
+      try {
+        if (frameFolder) functions.removeDirectory(frameFolder)
+        if (fs.statSync(dest).isDirectory()) {
+          functions.removeDirectory(dest)
+        } else {
+          fs.unlinkSync(dest)
+        }
+        error = false
+      } catch {
+        // ignore
+      }
+      await functions.timeout(1000)
+    }
+    return true
+  } 
+  return false
+})
+
+ipcMain.handle("download-error", async (event, info) => {
+  window?.webContents.send("download-error", info)
+})
+
+ipcMain.handle("download", async (event, info: {id: number, illust: PixivIllust, dest: string, format: string, speed: number, reverse: boolean, template: string}) => {
+  const pixiv = await Pixiv.refreshLogin("c-SC58UMg144msd2ed2vNAkMnJAVKPPlik-0HkOPoAw")
+  const {id, illust, dest, format, speed, reverse, template} = info
+  window?.webContents.send("download-started", {id, illust})
+  const folder = path.dirname(dest)
+  if (!fs.existsSync(folder)) fs.mkdirSync(folder, {recursive: true})
+  if (illust.type === "ugoira") {
+    // Download Ugoira
+    const metadata = await pixiv.ugoira.get(illust.id).then((r) => r.ugoira_metadata)
+    const zipUrl = metadata.zip_urls.medium
+    if (format === "gif") {
+      const frameFolder = path.join(folder, illust.id.toString())
+      if (!fs.existsSync(frameFolder)) fs.mkdirSync(frameFolder, {recursive: true})
+      active.push({id, dest, frameFolder, action: null})
+      const writeStream = await axios.get(zipUrl, {responseType: "stream", headers: {Referer: "https://www.pixiv.net/"}}).then((r) => r.data.pipe(unzip.Extract({path: frameFolder})))
+      await pixiv.util.awaitStream(writeStream)
+      const frames = fs.readdirSync(frameFolder)
+      const constraint = speed > 1 ? frames.length / speed : frames.length
+      let step = Math.ceil(frames.length / constraint)
+      let frameArray: string[] = []
+      let delayArray: number[] = []
+      for (let i = 0; i < frames.length; i += step) {
+          if (frames[i].slice(-5) === ".webp") continue
+          if (!metadata.frames[i]) break
+          frameArray.push(`${frameFolder}/${frames[i]}`)
+          delayArray.push(metadata.frames[i].delay)
+      }
+      if (speed < 1) delayArray = delayArray.map((n) => n / speed)
+      if (reverse) {
+          frameArray = frameArray.reverse()
+          delayArray = delayArray.reverse()
+      }
+      await pixiv.util.encodeGif(frameArray, delayArray, dest)
+      functions.removeDirectory(frameFolder)
+    } else if (format === "zip") {
+      active.push({id, dest, action: null})
+      const arrayBuffer = await axios.get(zipUrl, {responseType: "arraybuffer", headers: {Referer: "https://www.pixiv.net/"}}).then((r) => r.data)
+      fs.writeFileSync(dest, Buffer.from(arrayBuffer, "binary"))
+    }
+  } else if (illust.meta_pages.length) {
+    // Download Manga
+    if (!fs.existsSync(dest)) fs.mkdirSync(dest, {recursive: true})
+    active.push({id, dest, action: null})
+    for (let i = 0; i < illust.meta_pages.length; i++) {
+      const name = functions.parseTemplate(illust, template, i)
+      const image = illust.meta_pages[i].image_urls.large ? illust.meta_pages[i].image_urls.large : illust.meta_pages[i].image_urls.medium
+      const pageDest = `${dest}/${name}.${format}`
+      const arrayBuffer = await axios.get(image, {responseType: "arraybuffer", headers: {Referer: "https://www.pixiv.net/"}}).then((r) => r.data)
+      fs.writeFileSync(pageDest, Buffer.from(arrayBuffer, "binary"))
+    }
+  } else {
+    // Download Illust
+    active.push({id, dest, action: null})
+    const url = illust.image_urls.large ? illust.image_urls.large : illust.image_urls.medium
+    const arrayBuffer = await axios.get(url, {responseType: "arraybuffer", headers: {Referer: "https://www.pixiv.net/"}}).then((r) => r.data)
+    fs.writeFileSync(dest, Buffer.from(arrayBuffer, "binary"))
+  }
+  window?.webContents.send("download-ended", {id, output: dest})
+})
+
+ipcMain.handle("init-settings", () => {
+  return store.get("settings", null)
+})
+
+ipcMain.handle("store-settings", (event, settings) => {
+  const prev = store.get("settings", {}) as object
+  store.set("settings", {...prev, ...settings})
+})
+
+ipcMain.handle("get-downloads-folder", async (event, location: string) => {
+  if (store.has("downloads")) {
+    return store.get("downloads")
+  } else {
+    const downloads = app.getPath("downloads")
+    store.set("downloads", downloads)
+    return downloads
+  }
+})
+
+ipcMain.handle("open-location", async (event, location: string) => {
+  if (!fs.existsSync(location)) return
+  shell.showItemInFolder(path.normalize(location))
+})
+
+ipcMain.handle("select-directory", async (event, dir: string) => {
+  if (!window) return
+  if (dir === undefined) {
+    const result = await dialog.showOpenDialog(window, {
+      properties: ["openDirectory"]
+    })
+    dir = result.filePaths[0]
+  }
+  if (dir) {
+    store.set("downloads", dir)
+    return dir
+  }
+})
 
 ipcMain.handle("get-state", () => {
   return store.get("state", {})
@@ -69,6 +235,10 @@ if (!singleLock) {
         window?.webContents.toggleDevTools()
       })
     }
+    session.defaultSession.webRequest.onBeforeSendHeaders({urls: ["https://*.pixiv.net/*", "https://*.pximg.net/*"]}, (details, callback) => {
+      details.requestHeaders["Referer"] = "https://www.pixiv.net/"
+      callback({requestHeaders: details.requestHeaders})
+    })
   })
 }
 
