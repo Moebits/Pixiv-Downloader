@@ -188,7 +188,7 @@ ipcMain.handle("download", async (event, info: {id: number, illust: PixivIllust,
     if (!fs.existsSync(dest)) fs.mkdirSync(dest, {recursive: true})
     active.push({id, dest, action: null})
     for (let i = 0; i < illust.meta_pages.length; i++) {
-      const name = await functions.parseTemplate(illust, template, i, translateTitles)
+      const name = await functions.parseTemplate(illust, template, i, translateTitles, refreshToken)
       const image = illust.meta_pages[i].image_urls.large ? illust.meta_pages[i].image_urls.large : illust.meta_pages[i].image_urls.medium
       const pageDest = `${dest}/${name}.${format}`
       const arrayBuffer = await axios.get(image, {responseType: "arraybuffer", headers: {Referer: "https://www.pixiv.net/"}}).then((r) => r.data)

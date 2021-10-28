@@ -76,16 +76,25 @@ export default class Functions {
 
     public static clean = (text: string) => {
         return text?.replace(/[^a-z0-9_-\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf【】()\[\]&!#. ]/gi, "").replace(/~/g, "").replace(/ +/g, " ") ?? ""
-      }
+    }
 
-    public static parseTemplate = async (illust: PixivIllust, template: string, pageNum?: number, translateTitles?: boolean) => {
+    public static parseTemplate = async (illust: PixivIllust, template: string, pageNum?: number, translateTitles?: boolean, refreshToken?: string) => {
         if (pageNum != undefined) {
             template = template.replace(/(\*)/g, "")
         } else {
             template = template.replace(/(\*).*?(\*)/g, "")
         }
+        let title = illust.title
+        if (translateTitles) {
+            if (refreshToken) {
+                const pixiv = await Pixiv.refreshLogin(refreshToken as string)
+                title = await pixiv.util.translateTitle(illust.title)
+            } else {
+                title = await ipcRenderer.invoke("translate-title", illust.title)
+            }
+        }
         return template
-        .replace(/{title}/gi, Functions.clean(translateTitles ? await ipcRenderer.invoke("translate-title", illust.title) : illust.title))
+        .replace(/{title}/gi, Functions.clean(title))
         .replace(/{id}/gi, String(illust.id))
         .replace(/{artist}/gi, Functions.clean(illust.user.name))
         .replace(/{user}/gi, illust.user.account)

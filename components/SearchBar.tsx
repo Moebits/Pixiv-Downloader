@@ -3,7 +3,7 @@ import React, {useState, useEffect, useRef, useContext} from "react"
 import searchButton from "../assets/icons/searchButton.png"
 import ErrorMessage from "./ErrorMessage"
 import searchButtonHover from "../assets/icons/searchButton-hover.png"
-import {DirectoryContext, KindContext, FormatContext, TranslateContext, R18Context, ReverseContext, SpeedContext, TemplateContext, FolderMapContext, SortContext, TargetContext, IllustLimitContext, MangaLimitContext, UgoiraLimitContext, TranslateTitlesContext} from "../renderer"
+import {DirectoryContext, KindContext, FormatContext, TranslateContext, R18Context, ReverseContext, SpeedContext, TemplateContext, FolderMapContext, SortContext, TargetContext, IllustLimitContext, MangaLimitContext, UgoiraLimitContext, TranslateTitlesContext, RestrictContext} from "../renderer"
 import Pixiv, {PixivIllust} from "pixiv.ts"
 import functions from "../structures/functions"
 import "../styles/searchbar.less"
@@ -24,6 +24,7 @@ const SearchBar: React.FunctionComponent = (props) => {
     const {mangaLimit} = useContext(MangaLimitContext)
     const {ugoiraLimit} = useContext(UgoiraLimitContext)
     const {translateTitles} = useContext(TranslateTitlesContext)
+    const {restrict} = useContext(RestrictContext)
     const [id, setID] = useState(1)
     const [searchHover, setSearchHover] = useState(false)
     const searchBoxRef = useRef(null) as React.RefObject<HTMLInputElement>
@@ -85,13 +86,12 @@ const SearchBar: React.FunctionComponent = (props) => {
 
     const download = async (query: string) => {
         const refreshToken = await ipcRenderer.invoke("get-refresh-token")
-        console.log(refreshToken)
         if (!refreshToken) return ipcRenderer.invoke("download-error", "login")
         const pixiv = await Pixiv.refreshLogin(refreshToken)
         const illustID = /\d{5,}/.test(query) ? Number(query.match(/\d{5,}/)?.[0]) : null
         if (illustID) {
             if (/users/.test(query)) {
-                let illusts = await pixiv.user.illusts({user_id: illustID, sort})
+                let illusts = /bookmarks/.test(query) ? await pixiv.user.bookmarksIllust({user_id: illustID, sort, restrict}) : await pixiv.user.illusts({user_id: illustID, sort, restrict})
                 if (pixiv.user.nextURL) illusts = [...illusts, ...await pixiv.util.multiCall({next_url: pixiv.user.nextURL, illusts})]
                 illusts = illusts.filter((i) => i.type === kind).filter((i) => r18 ? i.x_restrict === 1 : i.x_restrict === 0)
                 let current = id
@@ -134,7 +134,7 @@ const SearchBar: React.FunctionComponent = (props) => {
             } else {
                 if (kind === "ugoira") query += " うごイラ"
                 if (r18) query += " R-18"
-                illusts = await pixiv.search.illusts({word: query, en: translate, r18, type: kind, sort, search_target: target})
+                illusts = await pixiv.search.illusts({word: query, en: translate, r18, type: kind, sort, search_target: target, restrict})
             }
             let current = id
             let downloaded = false

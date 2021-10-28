@@ -5,9 +5,10 @@
 This application lets you download images/ugoiras from Pixiv in bulk.
 
 ### Features
-- Download illustrations and manga (png/jpg) and ugoiras (gif/zip)
+- Download illustrations, manga (png/jpg) and ugoiras (gif/zip)
 - Bulk download illustrations by tag
 - Download all of an artist's illustrations
+- Download all of an artist's bookmarks
 - Option to automatically translate tags to Japanese and translate titles to English
 - Customize the output file names
 - Map illustrations to sub-folders based on certain tags

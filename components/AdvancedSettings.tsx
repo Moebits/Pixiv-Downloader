@@ -1,7 +1,7 @@
 import {ipcRenderer} from "electron"
 import React, {useContext, useEffect, useRef, useState} from "react"
 import {Dropdown, DropdownButton} from "react-bootstrap"
-import {TemplateContext, FolderMapContext, SortContext, TargetContext, IllustLimitContext, MangaLimitContext, UgoiraLimitContext, TranslateTitlesContext} from "../renderer"
+import {TemplateContext, FolderMapContext, SortContext, TargetContext, IllustLimitContext, MangaLimitContext, UgoiraLimitContext, TranslateTitlesContext, RestrictContext} from "../renderer"
 import functions from "../structures/functions"
 import "../styles/advancedsettings.less"
 
@@ -14,6 +14,7 @@ const AdvancedSettings: React.FunctionComponent = (props) => {
     const {sort, setSort} = useContext(SortContext)
     const {target, setTarget} = useContext(TargetContext)
     const {translateTitles, setTranslateTitles} = useContext(TranslateTitlesContext)
+    const {restrict, setRestrict} = useContext(RestrictContext)
     const [visible, setVisible] = useState(false)
     const [cookieDeleted, setCookieDeleted] = useState(false)
 
@@ -43,12 +44,13 @@ const AdvancedSettings: React.FunctionComponent = (props) => {
             if (settings.illustLimit) setIllustLimit(settings.illustLimit)
             if (settings.mangaLimit) setMangaLimit(settings.mangaLimit)
             if (settings.ugoiraLimit) setUgoiraLimit(settings.ugoiraLimit)
-            if (settings.translateTitles) setUgoiraLimit(settings.translateTitles)
+            if (settings.translateTitles) setTranslateTitles(settings.translateTitles)
+            if (settings.restrict) setRestrict(settings.restrict)
         }
     }
 
     useEffect(() => {
-        ipcRenderer.invoke("store-settings", {template, folderMap, sort, target, illustLimit, mangaLimit, ugoiraLimit, translateTitles})
+        ipcRenderer.invoke("store-settings", {template, folderMap, sort, target, restrict, illustLimit, mangaLimit, ugoiraLimit, translateTitles})
         functions.logoDrag(!visible)
     })
 
@@ -62,6 +64,7 @@ const AdvancedSettings: React.FunctionComponent = (props) => {
         setFolderMap("")
         setSort("date_desc")
         setTarget("partial_match_for_tags")
+        setRestrict("all")
         setIllustLimit(100)
         setMangaLimit(25)
         setUgoiraLimit(10)
@@ -182,6 +185,14 @@ const AdvancedSettings: React.FunctionComponent = (props) => {
                                     <Dropdown.Item active={target === "partial_match_for_tags"} onClick={() => setTarget("partial_match_for_tags")}>partial_match_for_tags</Dropdown.Item>
                                     <Dropdown.Item active={target === "exact_match_for_tags"} onClick={() => setTarget("exact_match_for_tags")}>exact_match_for_tags</Dropdown.Item>
                                     <Dropdown.Item active={target === "title_and_caption"} onClick={() => setTarget("title_and_caption")}>title_and_caption</Dropdown.Item>
+                                </DropdownButton>
+                            </div>
+                            <div className="settings-row">
+                                <p className="settings-text">Restrict: </p>
+                                <DropdownButton title={restrict} drop="down">
+                                    <Dropdown.Item active={restrict === "all"} onClick={() => setRestrict("all")}>all</Dropdown.Item>
+                                    <Dropdown.Item active={restrict === "public"} onClick={() => setRestrict("public")}>public</Dropdown.Item>
+                                    <Dropdown.Item active={restrict === "private"} onClick={() => setRestrict("private")}>private</Dropdown.Item>
                                 </DropdownButton>
                             </div>
                             <div className="settings-row">
