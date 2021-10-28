@@ -19,7 +19,7 @@ const ErrorMessage: React.FunctionComponent = (props) => {
         if (error === "search") {
             return "Could not find any illustrations."
         } else if (error === "login") {
-            return "You must login through the browser first."
+            return "You need to log in through the browser first."
         }
     }
 

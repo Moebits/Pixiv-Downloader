@@ -1,6 +1,8 @@
-import { ipcRenderer } from "electron"
+import {ipcRenderer} from "electron"
 import fs from "fs"
 import path from "path"
+import crypto from "crypto"
+import base64url from "base64url"
 import Pixiv, {PixivIllust} from "pixiv.ts"
 
 export default class Functions {
@@ -77,7 +79,6 @@ export default class Functions {
       }
 
     public static parseTemplate = async (illust: PixivIllust, template: string, pageNum?: number, translateTitles?: boolean) => {
-        const pixiv = await Pixiv.refreshLogin("c-SC58UMg144msd2ed2vNAkMnJAVKPPlik-0HkOPoAw")
         if (pageNum != undefined) {
             template = template.replace(/(\*)/g, "")
         } else {
@@ -97,13 +98,19 @@ export default class Functions {
 
     public static parseFolderMap = async (illust: PixivIllust, folderMap: string, translate?: boolean) => {
         if (!folderMap) return ""
-        const pixiv = await Pixiv.refreshLogin("c-SC58UMg144msd2ed2vNAkMnJAVKPPlik-0HkOPoAw")
+        const refreshToken = await ipcRenderer.invoke("get-refresh-token")
+        let pixiv = null as unknown as Pixiv
+        if (refreshToken) {
+            pixiv = await Pixiv.refreshLogin(refreshToken)
+        } else {
+            translate = false
+        }
         let mapping = []
         const folderArgs = folderMap.split(",")
         for (let i = 0; i < folderArgs.length; i++) {
             const fArgs = folderArgs[i].split(":")
             const folder = fArgs[0]
-            const tag = translate ? await pixiv.util.translateTag(fArgs[1] ?? "") : fArgs[1]
+            const tag = translate ? await pixiv?.util.translateTag(fArgs[1] ?? "") : fArgs[1]
             mapping.push({tag, folder})
         }
         mapping = mapping.sort((a, b) => b.tag.length - a.tag.length)
@@ -117,5 +124,13 @@ export default class Functions {
             }
         }
         return ""
+    }
+
+    public static getOauthURL = () => {
+        const login_url = "https://app-api.pixiv.net/web/v1/login"
+        const code_verifier = crypto.randomBytes(32).toString("hex")
+        ipcRenderer.invoke("update-code-verifier", code_verifier)
+        const code_challenge = base64url.encode(crypto.createHash("sha256").update(code_verifier).digest())
+        return `${login_url}?code_challenge=${code_challenge}&code_challenge_method=S256&client=pixiv-android`
     }
 }

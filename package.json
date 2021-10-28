@@ -1,6 +1,6 @@
 {
   "name": "pixiv-downloader",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "An app that downloads images/ugoira from Pixiv",
   "main": "dist/main.js",
   "scripts": {
@@ -79,6 +79,7 @@
   "dependencies": {
     "@electron/remote": "^2.0.1",
     "axios": "^0.21.1",
+    "base64url": "^3.0.1",
     "bootstrap": "^4.6.0",
     "electron-store": "^7.0.1",
     "electron-updater": "^4.3.5",

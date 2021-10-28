@@ -11,6 +11,7 @@ This application lets you download images/ugoiras from Pixiv in bulk.
 - Option to automatically translate tags to Japanese and translate titles to English
 - Customize the output file names
 - Map illustrations to sub-folders based on certain tags
+- If you have Pixiv Premium, you can sort results by popularity
 
 ### Output Template
 

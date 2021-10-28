@@ -78,7 +78,6 @@ const IllustContainer: React.FunctionComponent<IllustContainerProps> = (props: I
     })
 
     const updateTitle = async () => {
-        const pixiv = await Pixiv.refreshLogin("c-SC58UMg144msd2ed2vNAkMnJAVKPPlik-0HkOPoAw")
         if (translateTitles) {
             const title = await ipcRenderer.invoke("translate-title", props.illust.title)
             setTitle(title)

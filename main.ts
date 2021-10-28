@@ -8,9 +8,11 @@ import pack from "./package.json"
 import Pixiv, {PixivIllust} from "pixiv.ts"
 import unzip from "unzipper"
 import functions from "./structures/functions"
+import querystring from "querystring"
 import imageSize from "image-size"
 import axios from "axios"
 import fs from "fs"
+import {URL} from "url"
 require('@electron/remote/main').initialize()
 
 process.setMaxListeners(0)
@@ -20,9 +22,25 @@ autoUpdater.autoDownload = false
 const store = new Store()
 
 const active: Array<{id: number, dest: string, frameFolder?: string, action: null | "kill"}> = []
+let code_verifier = ""
+
+ipcMain.handle("delete-cookies", () => {
+  session.defaultSession.clearStorageData()
+  store.delete("refreshToken")
+})
+
+ipcMain.handle("get-refresh-token", () => {
+  return store.get("refreshToken", "")
+})
+
+ipcMain.handle("update-code-verifier", (event, verifier) => {
+  code_verifier = verifier
+})
 
 ipcMain.handle("translate-title", async (event, title) => {
-  const pixiv = await Pixiv.refreshLogin("c-SC58UMg144msd2ed2vNAkMnJAVKPPlik-0HkOPoAw")
+  const refreshToken = store.get("refreshToken", "") as string
+  if (!refreshToken) return title
+  const pixiv = await Pixiv.refreshLogin(refreshToken)
   return pixiv.util.translateTitle(title)
 })
 
@@ -125,7 +143,9 @@ ipcMain.handle("download-error", async (event, info) => {
 })
 
 ipcMain.handle("download", async (event, info: {id: number, illust: PixivIllust, dest: string, format: string, speed: number, reverse: boolean, template: string, translateTitles: boolean}) => {
-  const pixiv = await Pixiv.refreshLogin("c-SC58UMg144msd2ed2vNAkMnJAVKPPlik-0HkOPoAw")
+  const refreshToken = store.get("refreshToken", "") as string
+  if (!refreshToken) return window?.webContents.send("download-error", "login")
+  const pixiv = await Pixiv.refreshLogin(refreshToken)
   const {id, illust, dest, format, speed, reverse, template, translateTitles} = info
   window?.webContents.send("download-started", {id, illust})
   const folder = path.dirname(dest)
@@ -289,8 +309,23 @@ if (!singleLock) {
       details.requestHeaders["Referer"] = "https://www.pixiv.net/"
       callback({requestHeaders: details.requestHeaders})
     })
-    session.defaultSession.webRequest.onCompleted({urls: ["https://app-api.pixiv.net/*"]}, (details) => {
-      console.log(details.url)
+    session.defaultSession.webRequest.onBeforeRedirect({urls: ["https://*.pixiv.net/*"]}, async (details) => {
+      if (details.redirectURL.includes("https://app-api.pixiv.net/web/v1/users/auth/pixiv/callback")) {
+        await functions.timeout(50)
+        const code = new URL(details.redirectURL).searchParams.get("code")
+        const refreshToken = await axios.post("https://oauth.secure.pixiv.net/auth/token", querystring.stringify({
+            "client_id": "MOBrBDS8blbauoSck0ZfDbtuzpyT",
+            "client_secret": "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj",
+            "code": code,
+            "code_verifier": code_verifier,
+            "grant_type": "authorization_code",
+            "include_policy": "true",
+            "redirect_uri": "https://app-api.pixiv.net/web/v1/users/auth/pixiv/callback"
+          }), {headers: {"user-agent": "PixivAndroidApp/5.0.234 (Android 11; Pixel 5)"}}).then((r) => r.data.refresh_token)
+        console.log(refreshToken)
+        store.set("refreshToken", refreshToken)
+        website?.webContents.send("navigate-home")
+      }
     })
   })
 }

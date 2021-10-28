@@ -15,6 +15,7 @@ const AdvancedSettings: React.FunctionComponent = (props) => {
     const {target, setTarget} = useContext(TargetContext)
     const {translateTitles, setTranslateTitles} = useContext(TranslateTitlesContext)
     const [visible, setVisible] = useState(false)
+    const [cookieDeleted, setCookieDeleted] = useState(false)
 
     useEffect(() => {
         const showSettingsDialog = (event: any, update: any) => {
@@ -143,6 +144,12 @@ const AdvancedSettings: React.FunctionComponent = (props) => {
         }
     }
 
+    const deleteCookie = () => {
+        ipcRenderer.invoke("delete-cookies")
+        setCookieDeleted(true)
+        setTimeout(() => {setCookieDeleted(false)}, 2000)
+    }
+
     if (visible) {
         return (
             <section className="settings-dialog">
@@ -192,6 +199,10 @@ const AdvancedSettings: React.FunctionComponent = (props) => {
                             <div className="settings-row">
                                 <p className="settings-text">Translate Titles:</p>
                                 <input className="settings-checkbox" type="checkbox" checked={translateTitles} onClick={() => setTranslateTitles((prev: boolean) => !prev)}/>
+                            </div>
+                            <div className="settings-row">
+                                <button onClick={deleteCookie} className="cookie-button">Delete Cookies</button>
+                                {cookieDeleted ? <p className="cookie-text">Deleted!</p> : null}
                             </div>
                         </div>
                         <div className="settings-button-container">

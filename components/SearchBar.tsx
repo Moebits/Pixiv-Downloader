@@ -84,7 +84,10 @@ const SearchBar: React.FunctionComponent = (props) => {
     }
 
     const download = async (query: string) => {
-        const pixiv = await Pixiv.refreshLogin("c-SC58UMg144msd2ed2vNAkMnJAVKPPlik-0HkOPoAw")
+        const refreshToken = await ipcRenderer.invoke("get-refresh-token")
+        console.log(refreshToken)
+        if (!refreshToken) return ipcRenderer.invoke("download-error", "login")
+        const pixiv = await Pixiv.refreshLogin(refreshToken)
         const illustID = /\d{5,}/.test(query) ? Number(query.match(/\d{5,}/)?.[0]) : null
         if (illustID) {
             if (/users/.test(query)) {
