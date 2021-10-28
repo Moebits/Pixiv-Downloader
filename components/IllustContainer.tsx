@@ -1,4 +1,4 @@
-import {ipcRenderer, remote} from "electron"
+import {ipcRenderer} from "electron"
 import functions from "../structures/functions"
 import React, {useState, useEffect, useRef, useReducer, useContext} from "react"
 import {ProgressBar} from "react-bootstrap"
@@ -12,8 +12,9 @@ import pSBC from "shade-blend-color"
 import bookmarks from "../assets/icons/bookmarks.png"
 import likes from "../assets/icons/likes.png"
 import views from "../assets/icons/views.png"
-import {PixivIllust} from "pixiv.ts"
-import {PreviewContext} from "../renderer"
+import Pixiv, {PixivIllust} from "pixiv.ts"
+import {PreviewContext, TranslateTitlesContext} from "../renderer"
+import path from "path"
 import "../styles/illustcontainer.less"
 
 export interface IllustContainerProps {
@@ -24,6 +25,7 @@ export interface IllustContainerProps {
 
 const IllustContainer: React.FunctionComponent<IllustContainerProps> = (props: IllustContainerProps) => {
     const {previewVisible} = useContext(PreviewContext)
+    const {translateTitles} = useContext(TranslateTitlesContext)
     const [deleted, setDeleted] = useState(false)
     const [output, setOutput] = useState("")
     const [hover, setHover] = useState(false)
@@ -35,6 +37,7 @@ const IllustContainer: React.FunctionComponent<IllustContainerProps> = (props: I
     const [clearSignal, setClearSignal] = useState(false)
     const [deleteSignal, setDeleteSignal] = useState(false)
     const [drag, setDrag] = useState(false)
+    const [title, setTitle] = useState(props.illust.title)
     const [ignored, forceUpdate] = useReducer(x => x + 1, 0)
     const progressBarRef = useRef(null) as React.RefObject<HTMLDivElement>
     const illustContainerRef = useRef(null) as React.RefObject<HTMLElement>
@@ -66,12 +69,23 @@ const IllustContainer: React.FunctionComponent<IllustContainerProps> = (props: I
     useEffect(() => {
         updateProgressColor()
         updateBackgroundColor()
+        updateTitle()
         if (clearSignal) {
             if (output) closeDownload()
             setClearSignal(false)
         }
         if (deleteSignal) deleteDownload()
     })
+
+    const updateTitle = async () => {
+        const pixiv = await Pixiv.refreshLogin("c-SC58UMg144msd2ed2vNAkMnJAVKPPlik-0HkOPoAw")
+        if (translateTitles) {
+            const title = await ipcRenderer.invoke("translate-title", props.illust.title)
+            setTitle(title)
+        } else {
+            setTitle(props.illust.title)
+        }
+    }
 
     const deleteDownload = async () => {
         if (deleted) return
@@ -157,7 +171,7 @@ const IllustContainer: React.FunctionComponent<IllustContainerProps> = (props: I
     }
 
     const getImage = () => {
-        if (props.illust.type === "ugoira" && output && !deleted) {
+        if ((path.extname(output ?? "") === ".gif") && !deleted) {
             return output
         } else {
             return props.illust.image_urls.large ? props.illust.image_urls.large : props.illust.image_urls.medium
@@ -186,10 +200,10 @@ const IllustContainer: React.FunctionComponent<IllustContainerProps> = (props: I
             </div>
             <div className="illust-middle">
                 <div className="illust-name">
-                    <p className="illust-text large hover" onMouseDown={(event) => event.stopPropagation()}><span onClick={() => remote.shell.openExternal(`https://www.pixiv.net/en/artworks/${props.illust.id}`)}>{props.illust.title}</span></p>
+                    <p className="illust-text large hover" onMouseDown={(event) => event.stopPropagation()}><span onClick={() => ipcRenderer.invoke("open-url", `https://www.pixiv.net/en/artworks/${props.illust.id}`)}>{title}</span></p>
                 </div>
                 <div className="illust-info">
-                    <p className="illust-text hover" onMouseDown={(event) => event.stopPropagation()}><span onClick={() => remote.shell.openExternal(`https://www.pixiv.net/en/users/${props.illust.user.id}`)}>{props.illust.user.name}</span></p>
+                    <p className="illust-text hover" onMouseDown={(event) => event.stopPropagation()}><span onClick={() => ipcRenderer.invoke("open-url", `https://www.pixiv.net/en/users/${props.illust.user.id}`)}>{props.illust.user.name}</span></p>
                     <p className="illust-text left" onMouseDown={(event) => event.stopPropagation()}>{props.illust.width}x{props.illust.height}</p>
                 </div>
                 <div className="illust-stats">

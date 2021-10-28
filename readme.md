@@ -24,5 +24,6 @@ in the format `folderName:tagName, folderName2:tagName2, folderName3:tagName3...
 be comma separated. 
 
 For example, if you search for "gabriel dropout" but want to map the different characters into sub-folders,
-you should provide the folder mapping `gabriel:gabriel, satania:satania, raphiel:raphiel, vignette:vignette`. For more
-accuracy provide the tags in Japanese, but they will be translated if you have the translate option enabled.
+you should provide the folder mapping `gabriel:天真=ガヴリール=ホワイト, satania:胡桃沢=サタニキア=マクドウェル, 
+raphiel:白羽=ラフィエル=エインズワース, vignette:月乃瀬=ヴィネット=エイプリル`. For better accuracy provide the tags 
+in Japanese, but they will be translated if you have the translate option enabled.

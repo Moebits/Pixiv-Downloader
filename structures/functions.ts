@@ -1,6 +1,7 @@
+import { ipcRenderer } from "electron"
 import fs from "fs"
 import path from "path"
-import {PixivIllust} from "pixiv.ts"
+import Pixiv, {PixivIllust} from "pixiv.ts"
 
 export default class Functions {
     public static arrayIncludes = (str: string, arr: string[]) => {
@@ -75,14 +76,15 @@ export default class Functions {
         return text?.replace(/[^a-z0-9_-\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf【】()\[\]&!#. ]/gi, "").replace(/~/g, "").replace(/ +/g, " ") ?? ""
       }
 
-    public static parseTemplate = (illust: PixivIllust, template: string, pageNum?: number) => {
+    public static parseTemplate = async (illust: PixivIllust, template: string, pageNum?: number, translateTitles?: boolean) => {
+        const pixiv = await Pixiv.refreshLogin("c-SC58UMg144msd2ed2vNAkMnJAVKPPlik-0HkOPoAw")
         if (pageNum != undefined) {
             template = template.replace(/(\*)/g, "")
         } else {
             template = template.replace(/(\*).*?(\*)/g, "")
         }
         return template
-        .replace(/{title}/gi, Functions.clean(illust.title))
+        .replace(/{title}/gi, Functions.clean(translateTitles ? await ipcRenderer.invoke("translate-title", illust.title) : illust.title))
         .replace(/{id}/gi, String(illust.id))
         .replace(/{artist}/gi, Functions.clean(illust.user.name))
         .replace(/{user}/gi, illust.user.account)
@@ -91,5 +93,29 @@ export default class Functions {
         .replace(/{date}/gi, illust.create_date.substring(0, 10))
         .replace(/{width}/gi, String(illust.width))
         .replace(/{height}/gi, String(illust.height))
+    }
+
+    public static parseFolderMap = async (illust: PixivIllust, folderMap: string, translate?: boolean) => {
+        if (!folderMap) return ""
+        const pixiv = await Pixiv.refreshLogin("c-SC58UMg144msd2ed2vNAkMnJAVKPPlik-0HkOPoAw")
+        let mapping = []
+        const folderArgs = folderMap.split(",")
+        for (let i = 0; i < folderArgs.length; i++) {
+            const fArgs = folderArgs[i].split(":")
+            const folder = fArgs[0]
+            const tag = translate ? await pixiv.util.translateTag(fArgs[1] ?? "") : fArgs[1]
+            mapping.push({tag, folder})
+        }
+        mapping = mapping.sort((a, b) => b.tag.length - a.tag.length)
+        for (let i = 0; i < illust.tags.length; i++) {
+            for (let j = 0; j < mapping.length; j++) {
+                const folder = mapping[j].folder
+                const tag = mapping[j].tag
+                if (tag.includes(illust.tags[i].name)) {
+                    return `${folder}/`
+                }
+            }
+        }
+        return ""
     }
 }

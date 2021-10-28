@@ -100,15 +100,15 @@ const OptionsBar: React.FunctionComponent = (props) => {
             </div>
             <div className="options-bar-box">
                 <input className="options-bar-checkbox" type="checkbox" checked={translate} onClick={handleTranslate}/>
-                <p className="options-bar-text">translate</p>
+                <p className="options-bar-text pointer" onClick={handleTranslate}>translate</p>
             </div>
             <div className="options-bar-box">
                 <input className="options-bar-checkbox" type="checkbox" checked={r18} onClick={handleR18}/>
-                <p className="options-bar-text">r18</p>
+                <p className="options-bar-text pointer" onClick={handleR18}>r18</p>
             </div>
             <div className="options-bar-box">
                 <input className="options-bar-checkbox" type="checkbox" checked={reverse} onClick={handleReverse}/>
-                <p className="options-bar-text">reverse</p>
+                <p className="options-bar-text pointer" onClick={handleReverse}>reverse</p>
             </div>
             <div className="options-bar-box">
                 <p className="options-bar-text">speed: </p>

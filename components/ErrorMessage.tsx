@@ -3,7 +3,7 @@ import React, {useState, useEffect} from "react"
 import "../styles/errormessage.less"
 
 const ErrorMessage: React.FunctionComponent = (props) => {
-    const [error, setError] = useState(null as "search" | null)
+    const [error, setError] = useState(null as "search" | "login" | null)
     
     useEffect(() => {
         const downloadError = (event: any, err: any) => {
@@ -18,6 +18,8 @@ const ErrorMessage: React.FunctionComponent = (props) => {
     const getMessage = () => {
         if (error === "search") {
             return "Could not find any illustrations."
+        } else if (error === "login") {
+            return "You must login through the browser first."
         }
     }
 

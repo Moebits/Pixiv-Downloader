@@ -11,13 +11,57 @@ import functions from "./structures/functions"
 import imageSize from "image-size"
 import axios from "axios"
 import fs from "fs"
+require('@electron/remote/main').initialize()
 
 process.setMaxListeners(0)
 let window: Electron.BrowserWindow | null
+let website: Electron.BrowserWindow | null
 autoUpdater.autoDownload = false
 const store = new Store()
 
 const active: Array<{id: number, dest: string, frameFolder?: string, action: null | "kill"}> = []
+
+ipcMain.handle("translate-title", async (event, title) => {
+  const pixiv = await Pixiv.refreshLogin("c-SC58UMg144msd2ed2vNAkMnJAVKPPlik-0HkOPoAw")
+  return pixiv.util.translateTitle(title)
+})
+
+ipcMain.handle("download-url", (event, url) => {
+  if (window?.isMinimized()) window?.restore()
+  window?.focus()
+  window?.webContents.send("download-url", url)
+})
+
+const openWebsite = async () => {
+  if (!website) {
+    website = new BrowserWindow({width: 900, height: 650, minWidth: 790, minHeight: 550, frame: false, backgroundColor: "#ffffff", center: false, webPreferences: {nodeIntegration: true, webviewTag: true, contextIsolation: false}})
+    await website.loadFile(path.join(__dirname, "website.html"))
+    website?.on("closed", () => {
+      website = null
+    })
+  } else {
+    if (website.isMinimized()) website.restore()
+    website.focus()
+  }
+}
+
+ipcMain.handle("open-url", async (event, url: string) => {
+  await openWebsite()
+  website?.webContents.send("open-url", url)
+})
+
+ipcMain.handle("open-website", async () => {
+  if (website) {
+    website.close()
+  } else {
+    await openWebsite()
+  }
+})
+
+ipcMain.handle("advanced-settings", () => {
+  window?.webContents.send("close-all-dialogs", "settings")
+  window?.webContents.send("show-settings-dialog")
+})
 
 ipcMain.handle("get-dimensions", async (event, url: string) => {
   const arrayBuffer = await axios.get(url, {responseType: "arraybuffer", headers: {Referer: "https://www.pixiv.net/"}}).then((r) => r.data)
@@ -79,9 +123,9 @@ ipcMain.handle("download-error", async (event, info) => {
   window?.webContents.send("download-error", info)
 })
 
-ipcMain.handle("download", async (event, info: {id: number, illust: PixivIllust, dest: string, format: string, speed: number, reverse: boolean, template: string}) => {
+ipcMain.handle("download", async (event, info: {id: number, illust: PixivIllust, dest: string, format: string, speed: number, reverse: boolean, template: string, translateTitles: boolean}) => {
   const pixiv = await Pixiv.refreshLogin("c-SC58UMg144msd2ed2vNAkMnJAVKPPlik-0HkOPoAw")
-  const {id, illust, dest, format, speed, reverse, template} = info
+  const {id, illust, dest, format, speed, reverse, template, translateTitles} = info
   window?.webContents.send("download-started", {id, illust})
   const folder = path.dirname(dest)
   if (!fs.existsSync(folder)) fs.mkdirSync(folder, {recursive: true})
@@ -123,7 +167,7 @@ ipcMain.handle("download", async (event, info: {id: number, illust: PixivIllust,
     if (!fs.existsSync(dest)) fs.mkdirSync(dest, {recursive: true})
     active.push({id, dest, action: null})
     for (let i = 0; i < illust.meta_pages.length; i++) {
-      const name = functions.parseTemplate(illust, template, i)
+      const name = await functions.parseTemplate(illust, template, i, translateTitles)
       const image = illust.meta_pages[i].image_urls.large ? illust.meta_pages[i].image_urls.large : illust.meta_pages[i].image_urls.medium
       const pageDest = `${dest}/${name}.${format}`
       const arrayBuffer = await axios.get(image, {responseType: "arraybuffer", headers: {Referer: "https://www.pixiv.net/"}}).then((r) => r.data)
@@ -224,22 +268,28 @@ if (!singleLock) {
   })
 
   app.on("ready", () => {
-    window = new BrowserWindow({width: 900, height: 650, minWidth: 720, minHeight: 450, frame: false, backgroundColor: "#656ac2", center: true, webPreferences: {nodeIntegration: true, contextIsolation: false, enableRemoteModule: true, webSecurity: false}})
+    window = new BrowserWindow({width: 900, height: 650, minWidth: 720, minHeight: 450, frame: false, backgroundColor: "#656ac2", center: true, webPreferences: {nodeIntegration: true, contextIsolation: false, webSecurity: false}})
     window.loadFile(path.join(__dirname, "index.html"))
     window.removeMenu()
+    require("@electron/remote/main").enable(window.webContents)
+    window.on("close", () => {
+      website?.close()
+    })
     window.on("closed", () => {
       window = null
     })
     if (process.env.DEVELOPMENT === "true") {
       globalShortcut.register("Control+Shift+I", () => {
         window?.webContents.toggleDevTools()
+        website?.webContents.toggleDevTools()
       })
     }
     session.defaultSession.webRequest.onBeforeSendHeaders({urls: ["https://*.pixiv.net/*", "https://*.pximg.net/*"]}, (details, callback) => {
       details.requestHeaders["Referer"] = "https://www.pixiv.net/"
       callback({requestHeaders: details.requestHeaders})
     })
+    session.defaultSession.webRequest.onCompleted({urls: ["https://app-api.pixiv.net/*"]}, (details) => {
+      console.log(details.url)
+    })
   })
 }
-
-app.allowRendererProcessReuse = false
