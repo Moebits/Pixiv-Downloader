@@ -279,7 +279,7 @@ if (!singleLock) {
     window.on("closed", () => {
       window = null
     })
-    if (true) {
+    if (process.env.DEVELOPMENT === "true") {
       globalShortcut.register("Control+Shift+I", () => {
         window?.webContents.toggleDevTools()
         website?.webContents.toggleDevTools()
