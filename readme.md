@@ -7,14 +7,14 @@
 You can customize the output file names. The default is `{title}*_p{page}*`. Adding slashes will create subfolders,
 e.g. `${artist}/${title}`. Any asterisks will be removed, as they are a special option for page numbers. The following replacements are available:
 
-{title} - The title of the illustration.
-{id} - The id of the illustration.
-\*{page}\* - The page number. The asterisk indicates that this will be omitted if there is only a single page.
-{artist} - The artist of the illustration.
-{user} - The pixiv id of the artist.
-{user id} - The user id of the artist.
-{date} - The date in YYYY-MM-DD format.
-{width} - The width of the illustration.
+{title} - The title of the illustration. \
+{id} - The id of the illustration. \
+\*{page}\* - The page number. The asterisk indicates that this will be omitted if there is only a single page. \
+{artist} - The artist of the illustration. \
+{user} - The pixiv id of the artist. \
+{user id} - The user id of the artist. \
+{date} - The date in YYYY-MM-DD format. \
+{width} - The width of the illustration. \
 {height} - The height of the illustration.
 
 ### Folder Mapping

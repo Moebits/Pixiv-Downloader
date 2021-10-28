@@ -47,7 +47,7 @@
       "provider": "github",
       "repo": "Pixiv-Downloader",
       "owner": "Tenpi",
-      "releaseType": "draft"
+      "releaseType": "release"
     }
   },
   "author": "Tenpi",

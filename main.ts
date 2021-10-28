@@ -36,6 +36,7 @@ const openWebsite = async () => {
   if (!website) {
     website = new BrowserWindow({width: 900, height: 650, minWidth: 790, minHeight: 550, frame: false, backgroundColor: "#ffffff", center: false, webPreferences: {nodeIntegration: true, webviewTag: true, contextIsolation: false}})
     await website.loadFile(path.join(__dirname, "website.html"))
+    require("@electron/remote/main").enable(website.webContents)
     website?.on("closed", () => {
       website = null
     })
