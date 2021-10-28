@@ -311,6 +311,7 @@ if (!singleLock) {
     })
     session.defaultSession.webRequest.onBeforeRedirect({urls: ["https://*.pixiv.net/*"]}, async (details) => {
       if (details.redirectURL.includes("https://app-api.pixiv.net/web/v1/users/auth/pixiv/callback")) {
+        website?.webContents.send("navigate-home")
         await functions.timeout(50)
         const code = new URL(details.redirectURL).searchParams.get("code")
         const refreshToken = await axios.post("https://oauth.secure.pixiv.net/auth/token", querystring.stringify({
@@ -322,9 +323,7 @@ if (!singleLock) {
             "include_policy": "true",
             "redirect_uri": "https://app-api.pixiv.net/web/v1/users/auth/pixiv/callback"
           }), {headers: {"user-agent": "PixivAndroidApp/5.0.234 (Android 11; Pixel 5)"}}).then((r) => r.data.refresh_token)
-        console.log(refreshToken)
         store.set("refreshToken", refreshToken)
-        website?.webContents.send("navigate-home")
       }
     })
   })
