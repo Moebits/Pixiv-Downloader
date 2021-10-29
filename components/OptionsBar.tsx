@@ -32,9 +32,11 @@ const OptionsBar: React.FunctionComponent = (props) => {
 
     const handleKind = (kind: string) => {
         if (kind === "ugoira") {
-            if (format === "png" || format === "jpg") setFormat("gif")
+            if (format !== "gif" || format !== "zip") setFormat("gif")
+        } else if (kind === "novel") {
+            setFormat("txt")
         } else {
-            if (format === "gif" || format === "zip") setFormat("png")
+            if (format !== "png" || format !== "jpg") setFormat("png")
         }
         setKind(kind)
     }
@@ -81,6 +83,7 @@ const OptionsBar: React.FunctionComponent = (props) => {
                 <DropdownButton title={kind} drop="down">
                     <Dropdown.Item active={kind === "illust"} onClick={() => handleKind("illust")}>illust</Dropdown.Item>
                     <Dropdown.Item active={kind === "manga"} onClick={() => handleKind("manga")}>manga</Dropdown.Item>
+                    <Dropdown.Item active={kind === "novel"} onClick={() => handleKind("novel")}>novel</Dropdown.Item>
                     <Dropdown.Item active={kind === "ugoira"} onClick={() => handleKind("ugoira")}>ugoira</Dropdown.Item>
                 </DropdownButton>
             </div>
@@ -90,6 +93,10 @@ const OptionsBar: React.FunctionComponent = (props) => {
                 <DropdownButton title={format} drop="down">
                     <Dropdown.Item active={format === "gif"} onClick={() => setFormat("gif")}>gif</Dropdown.Item>
                     <Dropdown.Item active={format === "zip"} onClick={() => setFormat("zip")}>zip</Dropdown.Item>
+                </DropdownButton>
+                : kind === "novel" ?
+                <DropdownButton title={format} drop="down">
+                    <Dropdown.Item active={format === "txt"} onClick={() => setFormat("txt")}>txt</Dropdown.Item>
                 </DropdownButton>
                 :
                 <DropdownButton title={format} drop="down">

@@ -1,7 +1,7 @@
 import {ipcRenderer} from "electron"
 import React, {useContext, useEffect, useRef, useState} from "react"
 import {Dropdown, DropdownButton} from "react-bootstrap"
-import {TemplateContext, FolderMapContext, SortContext, TargetContext, IllustLimitContext, MangaLimitContext, UgoiraLimitContext, TranslateTitlesContext, RestrictContext, MoeContext} from "../renderer"
+import {TemplateContext, FolderMapContext, SortContext, TargetContext, IllustLimitContext, MangaLimitContext, UgoiraLimitContext, TranslateTitlesContext, RestrictContext, MoeContext, BookmarksContext} from "../renderer"
 import functions from "../structures/functions"
 import "../styles/advancedsettings.less"
 
@@ -16,6 +16,7 @@ const AdvancedSettings: React.FunctionComponent = (props) => {
     const {translateTitles, setTranslateTitles} = useContext(TranslateTitlesContext)
     const {restrict, setRestrict} = useContext(RestrictContext)
     const {moe, setMoe} = useContext(MoeContext)
+    const {bookmarks, setBookmarks} = useContext(BookmarksContext)
     const [visible, setVisible] = useState(false)
     const [cookieDeleted, setCookieDeleted] = useState(false)
 
@@ -48,11 +49,12 @@ const AdvancedSettings: React.FunctionComponent = (props) => {
             if (settings.translateTitles) setTranslateTitles(settings.translateTitles)
             if (settings.restrict) setRestrict(settings.restrict)
             if (settings.moe) setMoe(settings.moe)
+            if (settings.bookmarks) setBookmarks(settings.bookmarks)
         }
     }
 
     useEffect(() => {
-        ipcRenderer.invoke("store-settings", {template, folderMap, sort, target, restrict, illustLimit, mangaLimit, ugoiraLimit, translateTitles, MoeContext})
+        ipcRenderer.invoke("store-settings", {template, folderMap, sort, target, restrict, illustLimit, mangaLimit, ugoiraLimit, translateTitles, moe, bookmarks})
         functions.logoDrag(!visible)
     })
 
@@ -72,6 +74,7 @@ const AdvancedSettings: React.FunctionComponent = (props) => {
         setUgoiraLimit(10)
         setTranslateTitles(false)
         setMoe(false)
+        setBookmarks(0)
     }
 
     const changeTemplate = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -193,6 +196,20 @@ const AdvancedSettings: React.FunctionComponent = (props) => {
                                 <DropdownButton title={restrict} drop="down">
                                     <Dropdown.Item active={restrict === "public"} onClick={() => setRestrict("public")}>public</Dropdown.Item>
                                     <Dropdown.Item active={restrict === "private"} onClick={() => setRestrict("private")}>private</Dropdown.Item>
+                                </DropdownButton>
+                            </div>
+                            <div className="settings-row">
+                                <p className="settings-text">Bookmarks: </p>
+                                <DropdownButton title={bookmarks} drop="down">
+                                    <Dropdown.Item active={bookmarks === 0} onClick={() => setBookmarks(0)}>0</Dropdown.Item>
+                                    <Dropdown.Item active={bookmarks === 50} onClick={() => setBookmarks(50)}>50</Dropdown.Item>
+                                    <Dropdown.Item active={bookmarks === 100} onClick={() => setBookmarks(100)}>100</Dropdown.Item>
+                                    <Dropdown.Item active={bookmarks === 300} onClick={() => setBookmarks(300)}>300</Dropdown.Item>
+                                    <Dropdown.Item active={bookmarks === 500} onClick={() => setBookmarks(500)}>500</Dropdown.Item>
+                                    <Dropdown.Item active={bookmarks === 1000} onClick={() => setBookmarks(1000)}>1000</Dropdown.Item>
+                                    <Dropdown.Item active={bookmarks === 3000} onClick={() => setBookmarks(3000)}>3000</Dropdown.Item>
+                                    <Dropdown.Item active={bookmarks === 5000} onClick={() => setBookmarks(5000)}>5000</Dropdown.Item>
+                                    <Dropdown.Item active={bookmarks === 10000} onClick={() => setBookmarks(10000)}>10000</Dropdown.Item>
                                 </DropdownButton>
                             </div>
                             <div className="settings-row">

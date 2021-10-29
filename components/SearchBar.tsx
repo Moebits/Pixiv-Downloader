@@ -3,8 +3,8 @@ import React, {useState, useEffect, useRef, useContext} from "react"
 import searchButton from "../assets/icons/searchButton.png"
 import ErrorMessage from "./ErrorMessage"
 import searchButtonHover from "../assets/icons/searchButton-hover.png"
-import {DirectoryContext, KindContext, FormatContext, TranslateContext, R18Context, ReverseContext, SpeedContext, TemplateContext, FolderMapContext, SortContext, TargetContext, IllustLimitContext, MangaLimitContext, UgoiraLimitContext, TranslateTitlesContext, RestrictContext, MoeContext} from "../renderer"
-import Pixiv, {PixivIllust} from "pixiv.ts"
+import {DirectoryContext, KindContext, FormatContext, TranslateContext, R18Context, ReverseContext, SpeedContext, TemplateContext, FolderMapContext, SortContext, TargetContext, IllustLimitContext, MangaLimitContext, UgoiraLimitContext, TranslateTitlesContext, RestrictContext, MoeContext, BookmarksContext} from "../renderer"
+import Pixiv, {PixivIllust, PixivNovel} from "pixiv.ts"
 import functions from "../structures/functions"
 import "../styles/searchbar.less"
 
@@ -26,6 +26,7 @@ const SearchBar: React.FunctionComponent = (props) => {
     const {translateTitles} = useContext(TranslateTitlesContext)
     const {restrict} = useContext(RestrictContext)
     const {moe} = useContext(MoeContext)
+    const {bookmarks} = useContext(BookmarksContext)
     const [id, setID] = useState(1)
     const [searchHover, setSearchHover] = useState(false)
     const searchBoxRef = useRef(null) as React.RefObject<HTMLInputElement>
@@ -57,15 +58,21 @@ const SearchBar: React.FunctionComponent = (props) => {
         if (searchText) return download(searchText)
     }
 
-    const updateFormat = (illust: PixivIllust) => {
+    const updateFormat = (illust: PixivIllust | PixivNovel) => {
         if (illust.type === "ugoira") {
-            if (format === "png" || format === "jpg") {
+            if (format !== "gif" || format !== "zip") {
                 setKind("ugoira")
                 setFormat("gif")
                 return "gif"
             }
+        } else if (illust.type === "novel") {
+            if (format !== "txt") {
+                setKind("novel")
+                setFormat("txt")
+                return "txt"
+            }
         } else {
-            if (format === "gif" || format === "zip") {
+            if (format !== "png" || format !== "jpg") {
                 setKind("illust")
                 setFormat("png")
                 return "png"
@@ -78,7 +85,7 @@ const SearchBar: React.FunctionComponent = (props) => {
         if (dir.endsWith("/")) dir = dir.slice(0, -1)
         const name = await functions.parseTemplate(illust, template, template.includes("*") ? undefined : 0, translateTitles)
         const tagFolder = await functions.parseFolderMap(illust, folderMap, translate)
-        if (illust.meta_pages.length) {
+        if (illust.meta_pages?.length) {
             return `${dir}/${tagFolder}${name}`
         } else {
             return `${dir}/${tagFolder}${name}.${newFormat ? newFormat : format}`
@@ -92,9 +99,15 @@ const SearchBar: React.FunctionComponent = (props) => {
         const illustID = /\d{5,}/.test(query) ? Number(query.match(/\d{5,}/)?.[0]) : null
         if (illustID) {
             if (/users/.test(query)) {
-                let illusts = /bookmarks/.test(query) ? await pixiv.user.bookmarksIllust({user_id: illustID, sort, restrict}) : await pixiv.user.illusts({user_id: illustID, sort, restrict})
-                if (pixiv.user.nextURL) illusts = [...illusts, ...await pixiv.util.multiCall({next_url: pixiv.user.nextURL, illusts})]
-                illusts = illusts.filter((i) => i.type === kind).filter((i) => r18 ? i.x_restrict === 1 : i.x_restrict === 0)
+                let illusts: PixivIllust[]
+                if (kind === "novel" || /novels/.test(query)) {
+                    illusts = await pixiv.user.novels({user_id: illustID, sort, restrict, bookmarks}) as any
+                    if (pixiv.user.nextURL) illusts = [...illusts, ...await pixiv.util.multiCall({next_url: pixiv.user.nextURL, novels: illusts as any})]
+                } else {
+                    illusts = /bookmarks/.test(query) ? await pixiv.user.bookmarksIllust({user_id: illustID, sort, restrict, bookmarks}) : await pixiv.user.illusts({user_id: illustID, sort, restrict, bookmarks})
+                    if (pixiv.user.nextURL) illusts = [...illusts, ...await pixiv.util.multiCall({next_url: pixiv.user.nextURL, illusts})]
+                    illusts = illusts.filter((i) => i.type === kind).filter((i) => r18 ? i.x_restrict === 1 : i.x_restrict === 0)
+                }
                 let current = id
                 let downloaded = false
                 for (let i = 0; i < illusts.length; i++) {
@@ -111,7 +124,7 @@ const SearchBar: React.FunctionComponent = (props) => {
                 if (!downloaded) return ipcRenderer.invoke("download-error", "search")
             } else {
                 try {
-                    const illust = await pixiv.illust.get(illustID)
+                    const illust = /novel/.test(query) ? await pixiv.novel.get(illustID) as any : await pixiv.illust.get(illustID)
                     const newFormat = updateFormat(illust)
                     let current = id
                     const image = illust.image_urls.large ? illust.image_urls.large : illust.image_urls.medium
@@ -128,22 +141,27 @@ const SearchBar: React.FunctionComponent = (props) => {
         } else {
             let illusts: PixivIllust[]
             if (query === "day") {
-                illusts = await pixiv.search.illusts({mode: r18 ? "day_r18" : "day", sort})
+                illusts = kind === "novel" ? await pixiv.search.novels({mode: r18 ? "day_r18" : "day", sort, bookmarks}) as any : await pixiv.search.illusts({mode: r18 ? "day_r18" : "day", sort, bookmarks})
             } else if (query === "week") {
-                illusts = await pixiv.search.illusts({mode: r18 ? "week_r18" : "week", sort})
+                illusts = kind === "novel" ? await pixiv.search.novels({mode: r18 ? "week_r18" : "week", sort, bookmarks}) as any : await pixiv.search.illusts({mode: r18 ? "week_r18" : "week", sort, bookmarks})
             } else if (query === "month") {
-                illusts = await pixiv.search.illusts({word: r18 ? "R-18" : "", mode: "month", sort})
-                
+                illusts = kind === "novel" ? await pixiv.search.novels({word: r18 ? "R-18" : "", mode: "month", sort, bookmarks}) as any : await pixiv.search.illusts({word: r18 ? "R-18" : "", mode: "month", sort, bookmarks})
             } else {
                 if (kind === "ugoira") query += " うごイラ"
                 if (r18) query += " R-18"
-                illusts = await pixiv.search.illusts({word: query, en: translate, r18, type: kind, sort, search_target: target, restrict, moe})
+                illusts = kind === "novel" ? await pixiv.search.novels({word: query, en: translate, r18, type: kind, sort, search_target: target, restrict, bookmarks}) as any :
+                await pixiv.search.illusts({word: query, en: translate, r18, type: kind, sort, search_target: target, restrict, bookmarks, moe})
             }
             let current = id
             let downloaded = false
-            let limit = kind === "illust" ? illustLimit : (kind === "manga" ? mangaLimit : ugoiraLimit)
-            if (pixiv.search.nextURL && illusts.length < limit) illusts = [...illusts, ...await pixiv.util.multiCall({next_url: pixiv.search.nextURL, illusts}, limit)]
-            illusts = illusts.filter((i) => r18 ? i.x_restrict === 1 : i.x_restrict === 0).slice(0, limit)
+            let limit = (kind === "illust" || kind === "novel") ? illustLimit : (kind === "manga" ? mangaLimit : ugoiraLimit)
+            if (kind === "novel") {
+                if (pixiv.search.nextURL && illusts.length < limit) illusts = [...illusts, ...await pixiv.util.multiCall({next_url: pixiv.search.nextURL, novels: illusts as any}, limit)]
+                illusts = illusts.slice(0, limit)
+            } else {
+                if (pixiv.search.nextURL && illusts.length < limit) illusts = [...illusts, ...await pixiv.util.multiCall({next_url: pixiv.search.nextURL, illusts}, limit)]
+                illusts = illusts.filter((i) => r18 ? i.x_restrict === 1 : i.x_restrict === 0).slice(0, limit)
+            }
             for (let i = 0; i < illusts.length; i++) {
                 const image = illusts[i].image_urls.large ? illusts[i].image_urls.large : illusts[i].image_urls.medium
                 const dimensions = await ipcRenderer.invoke("get-dimensions", image)

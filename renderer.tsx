@@ -35,6 +35,7 @@ export const UgoiraLimitContext = React.createContext<any>(null)
 export const TranslateTitlesContext = React.createContext<any>(null)
 export const RestrictContext = React.createContext<any>(null)
 export const MoeContext = React.createContext<any>(null)
+export const BookmarksContext = React.createContext<any>(null)
 
 const App = () => {
   const [previewVisible, setPreviewVisible] = useState(false)
@@ -56,9 +57,11 @@ const App = () => {
   const [translateTitles, setTranslateTitles] = useState(false)
   const [restrict, setRestrict] = useState("public")
   const [moe, setMoe] = useState(false)
+  const [bookmarks, setBookmarks] = useState(0)
 
   return (
     <main className="app">
+      <BookmarksContext.Provider value={{bookmarks, setBookmarks}}>
       <MoeContext.Provider value={{moe, setMoe}}>
       <RestrictContext.Provider value={{restrict, setRestrict}}>
       <TranslateTitlesContext.Provider value={{translateTitles, setTranslateTitles}}>
@@ -108,6 +111,7 @@ const App = () => {
       </TranslateTitlesContext.Provider>
       </RestrictContext.Provider>
       </MoeContext.Provider>
+      </BookmarksContext.Provider>
     </main>
   )
 }

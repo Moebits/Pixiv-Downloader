@@ -184,7 +184,11 @@ ipcMain.handle("download", async (event, info: {id: number, illust: PixivIllust,
       const arrayBuffer = await axios.get(zipUrl, {responseType: "arraybuffer", headers: {Referer: "https://www.pixiv.net/"}}).then((r) => r.data)
       fs.writeFileSync(dest, Buffer.from(arrayBuffer, "binary"))
     }
-  } else if (illust.meta_pages.length) {
+  } else if (illust.type === "novel") {
+    // Download Novel
+    const text = await pixiv.novel.text({novel_id: illust.id})
+    fs.writeFileSync(dest, text.novel_text)
+  } else if (illust.meta_pages?.length) {
     // Download Manga
     if (!fs.existsSync(dest)) fs.mkdirSync(dest, {recursive: true})
     active.push({id, dest, action: null})
