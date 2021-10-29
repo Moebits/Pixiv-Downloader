@@ -54,7 +54,7 @@ const App = () => {
   const [mangaLimit, setMangaLimit] = useState(25)
   const [ugoiraLimit, setUgoiraLimit] = useState(10)
   const [translateTitles, setTranslateTitles] = useState(false)
-  const [restrict, setRestrict] = useState("all")
+  const [restrict, setRestrict] = useState("public")
   const [moe, setMoe] = useState(false)
 
   return (

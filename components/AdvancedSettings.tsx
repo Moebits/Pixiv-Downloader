@@ -66,7 +66,7 @@ const AdvancedSettings: React.FunctionComponent = (props) => {
         setFolderMap("")
         setSort("date_desc")
         setTarget("partial_match_for_tags")
-        setRestrict("all")
+        setRestrict("public")
         setIllustLimit(100)
         setMangaLimit(25)
         setUgoiraLimit(10)
@@ -179,21 +179,18 @@ const AdvancedSettings: React.FunctionComponent = (props) => {
                                     <Dropdown.Item active={sort === "date_desc"} onClick={() => setSort("date_desc")}>date_desc</Dropdown.Item>
                                     <Dropdown.Item active={sort === "date_asc"} onClick={() => setSort("date_asc")}>date_asc</Dropdown.Item>
                                     <Dropdown.Item active={sort === "popular_desc"} onClick={() => setSort("popular_desc")}>popular_desc</Dropdown.Item>
-                                    <Dropdown.Item active={sort === "popular_asc"} onClick={() => setSort("popular_asc")}>popular_asc</Dropdown.Item>
                                 </DropdownButton>
                             </div>
                             <div className="settings-row">
                                 <p className="settings-text">Target: </p>
                                 <DropdownButton title={target} drop="down">
                                     <Dropdown.Item active={target === "partial_match_for_tags"} onClick={() => setTarget("partial_match_for_tags")}>partial_match_for_tags</Dropdown.Item>
-                                    <Dropdown.Item active={target === "exact_match_for_tags"} onClick={() => setTarget("exact_match_for_tags")}>exact_match_for_tags</Dropdown.Item>
                                     <Dropdown.Item active={target === "title_and_caption"} onClick={() => setTarget("title_and_caption")}>title_and_caption</Dropdown.Item>
                                 </DropdownButton>
                             </div>
                             <div className="settings-row">
                                 <p className="settings-text">Restrict: </p>
                                 <DropdownButton title={restrict} drop="down">
-                                    <Dropdown.Item active={restrict === "all"} onClick={() => setRestrict("all")}>all</Dropdown.Item>
                                     <Dropdown.Item active={restrict === "public"} onClick={() => setRestrict("public")}>public</Dropdown.Item>
                                     <Dropdown.Item active={restrict === "private"} onClick={() => setRestrict("private")}>private</Dropdown.Item>
                                 </DropdownButton>
