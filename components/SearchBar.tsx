@@ -3,7 +3,7 @@ import React, {useState, useEffect, useRef, useContext} from "react"
 import searchButton from "../assets/icons/searchButton.png"
 import ErrorMessage from "./ErrorMessage"
 import searchButtonHover from "../assets/icons/searchButton-hover.png"
-import {DirectoryContext, KindContext, FormatContext, TranslateContext, R18Context, ReverseContext, SpeedContext, TemplateContext, FolderMapContext, SortContext, TargetContext, IllustLimitContext, MangaLimitContext, UgoiraLimitContext, TranslateTitlesContext, RestrictContext} from "../renderer"
+import {DirectoryContext, KindContext, FormatContext, TranslateContext, R18Context, ReverseContext, SpeedContext, TemplateContext, FolderMapContext, SortContext, TargetContext, IllustLimitContext, MangaLimitContext, UgoiraLimitContext, TranslateTitlesContext, RestrictContext, MoeContext} from "../renderer"
 import Pixiv, {PixivIllust} from "pixiv.ts"
 import functions from "../structures/functions"
 import "../styles/searchbar.less"
@@ -25,6 +25,7 @@ const SearchBar: React.FunctionComponent = (props) => {
     const {ugoiraLimit} = useContext(UgoiraLimitContext)
     const {translateTitles} = useContext(TranslateTitlesContext)
     const {restrict} = useContext(RestrictContext)
+    const {moe} = useContext(MoeContext)
     const [id, setID] = useState(1)
     const [searchHover, setSearchHover] = useState(false)
     const searchBoxRef = useRef(null) as React.RefObject<HTMLInputElement>
@@ -101,7 +102,8 @@ const SearchBar: React.FunctionComponent = (props) => {
                     const dimensions = await ipcRenderer.invoke("get-dimensions", image)
                     illusts[i].width = dimensions.width
                     illusts[i].height = dimensions.height
-                    ipcRenderer.invoke("download", {id: current, illust: illusts[i], dest: await parseDest(illusts[i], directory), format, speed, reverse, template, translateTitles})
+                    const dest = await parseDest(illusts[i], directory)
+                    ipcRenderer.invoke("download", {id: current, illust: illusts[i], dest, format, speed, reverse, template, translateTitles})
                     downloaded = true
                     current += 1
                     setID(prev => prev + 1)
@@ -116,7 +118,8 @@ const SearchBar: React.FunctionComponent = (props) => {
                     const dimensions = await ipcRenderer.invoke("get-dimensions", image)
                     illust.width = dimensions.width
                     illust.height = dimensions.height
-                    ipcRenderer.invoke("download", {id: current, illust, dest: await parseDest(illust, directory, newFormat), format, speed, reverse, template, translateTitles})
+                    const dest = await parseDest(illust, directory, newFormat)
+                    ipcRenderer.invoke("download", {id: current, illust, dest, format, speed, reverse, template, translateTitles})
                     setID(prev => prev + 1)
                 } catch {
                     return ipcRenderer.invoke("download-error", "search")
@@ -134,7 +137,7 @@ const SearchBar: React.FunctionComponent = (props) => {
             } else {
                 if (kind === "ugoira") query += " うごイラ"
                 if (r18) query += " R-18"
-                illusts = await pixiv.search.illusts({word: query, en: translate, r18, type: kind, sort, search_target: target, restrict})
+                illusts = await pixiv.search.illusts({word: query, en: translate, r18, type: kind, sort, search_target: target, restrict, moe})
             }
             let current = id
             let downloaded = false
@@ -146,7 +149,8 @@ const SearchBar: React.FunctionComponent = (props) => {
                 const dimensions = await ipcRenderer.invoke("get-dimensions", image)
                 illusts[i].width = dimensions.width
                 illusts[i].height = dimensions.height
-                ipcRenderer.invoke("download", {id: current, illust: illusts[i], dest: await parseDest(illusts[i], directory), format, speed, reverse, template, translateTitles})
+                const dest = await parseDest(illusts[i], directory)
+                ipcRenderer.invoke("download", {id: current, illust: illusts[i], dest, format, speed, reverse, template, translateTitles})
                 downloaded = true
                 current += 1
                 setID(prev => prev + 1)

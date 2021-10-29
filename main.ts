@@ -52,7 +52,7 @@ ipcMain.handle("download-url", (event, url) => {
 
 const openWebsite = async () => {
   if (!website) {
-    website = new BrowserWindow({width: 900, height: 650, minWidth: 790, minHeight: 550, frame: false, backgroundColor: "#ffffff", center: false, webPreferences: {nodeIntegration: true, webviewTag: true, contextIsolation: false}})
+    website = new BrowserWindow({width: 800, height: 650, minWidth: 790, minHeight: 550, frame: false, backgroundColor: "#ffffff", center: false, webPreferences: {nodeIntegration: true, webviewTag: true, contextIsolation: false}})
     await website.loadFile(path.join(__dirname, "website.html"))
     require("@electron/remote/main").enable(website.webContents)
     website?.on("closed", () => {
@@ -160,7 +160,8 @@ ipcMain.handle("download", async (event, info: {id: number, illust: PixivIllust,
       active.push({id, dest, frameFolder, action: null})
       const writeStream = await axios.get(zipUrl, {responseType: "stream", headers: {Referer: "https://www.pixiv.net/"}}).then((r) => r.data.pipe(unzip.Extract({path: frameFolder})))
       await pixiv.util.awaitStream(writeStream)
-      const frames = fs.readdirSync(frameFolder)
+      let frames = fs.readdirSync(frameFolder)
+      frames = frames.sort(new Intl.Collator(undefined, {numeric: true, sensitivity: "base"}).compare)
       const constraint = speed > 1 ? frames.length / speed : frames.length
       let step = Math.ceil(frames.length / constraint)
       let frameArray: string[] = []
@@ -289,7 +290,7 @@ if (!singleLock) {
   })
 
   app.on("ready", () => {
-    window = new BrowserWindow({width: 900, height: 650, minWidth: 720, minHeight: 450, frame: false, backgroundColor: "#656ac2", center: true, webPreferences: {nodeIntegration: true, contextIsolation: false, webSecurity: false}})
+    window = new BrowserWindow({width: 800, height: 650, minWidth: 720, minHeight: 450, frame: false, backgroundColor: "#656ac2", center: true, webPreferences: {nodeIntegration: true, contextIsolation: false, webSecurity: false}})
     window.loadFile(path.join(__dirname, "index.html"))
     window.removeMenu()
     require("@electron/remote/main").enable(window.webContents)

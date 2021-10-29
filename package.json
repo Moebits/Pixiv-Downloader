@@ -1,6 +1,6 @@
 {
   "name": "pixiv-downloader",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "An app that downloads images/ugoira from Pixiv",
   "main": "dist/main.js",
   "scripts": {
@@ -47,7 +47,7 @@
       "provider": "github",
       "repo": "Pixiv-Downloader",
       "owner": "Tenpi",
-      "releaseType": "release"
+      "releaseType": "draft"
     }
   },
   "author": "Tenpi",
@@ -84,7 +84,7 @@
     "electron-store": "^7.0.1",
     "electron-updater": "^4.3.5",
     "image-size": "^0.5.5",
-    "pixiv.ts": "^0.4.7",
+    "pixiv.ts": "^0.4.8",
     "react": "^17.0.1",
     "react-bootstrap": "^1.4.3",
     "react-dom": "^17.0.1",

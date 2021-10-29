@@ -1,7 +1,7 @@
 import {ipcRenderer} from "electron"
 import React, {useContext, useEffect, useRef, useState} from "react"
 import {Dropdown, DropdownButton} from "react-bootstrap"
-import {TemplateContext, FolderMapContext, SortContext, TargetContext, IllustLimitContext, MangaLimitContext, UgoiraLimitContext, TranslateTitlesContext, RestrictContext} from "../renderer"
+import {TemplateContext, FolderMapContext, SortContext, TargetContext, IllustLimitContext, MangaLimitContext, UgoiraLimitContext, TranslateTitlesContext, RestrictContext, MoeContext} from "../renderer"
 import functions from "../structures/functions"
 import "../styles/advancedsettings.less"
 
@@ -15,6 +15,7 @@ const AdvancedSettings: React.FunctionComponent = (props) => {
     const {target, setTarget} = useContext(TargetContext)
     const {translateTitles, setTranslateTitles} = useContext(TranslateTitlesContext)
     const {restrict, setRestrict} = useContext(RestrictContext)
+    const {moe, setMoe} = useContext(MoeContext)
     const [visible, setVisible] = useState(false)
     const [cookieDeleted, setCookieDeleted] = useState(false)
 
@@ -46,11 +47,12 @@ const AdvancedSettings: React.FunctionComponent = (props) => {
             if (settings.ugoiraLimit) setUgoiraLimit(settings.ugoiraLimit)
             if (settings.translateTitles) setTranslateTitles(settings.translateTitles)
             if (settings.restrict) setRestrict(settings.restrict)
+            if (settings.moe) setMoe(settings.moe)
         }
     }
 
     useEffect(() => {
-        ipcRenderer.invoke("store-settings", {template, folderMap, sort, target, restrict, illustLimit, mangaLimit, ugoiraLimit, translateTitles})
+        ipcRenderer.invoke("store-settings", {template, folderMap, sort, target, restrict, illustLimit, mangaLimit, ugoiraLimit, translateTitles, MoeContext})
         functions.logoDrag(!visible)
     })
 
@@ -68,7 +70,8 @@ const AdvancedSettings: React.FunctionComponent = (props) => {
         setIllustLimit(100)
         setMangaLimit(25)
         setUgoiraLimit(10)
-        setTranslateTitles(true)
+        setTranslateTitles(false)
+        setMoe(false)
     }
 
     const changeTemplate = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -210,6 +213,10 @@ const AdvancedSettings: React.FunctionComponent = (props) => {
                             <div className="settings-row">
                                 <p className="settings-text">Translate Titles:</p>
                                 <input className="settings-checkbox" type="checkbox" checked={translateTitles} onClick={() => setTranslateTitles((prev: boolean) => !prev)}/>
+                            </div>
+                            <div className="settings-row">
+                                <p className="settings-text">Pixiv.moe:</p>
+                                <input className="settings-checkbox" type="checkbox" checked={moe} onClick={() => setMoe((prev: boolean) => !prev)}/>
                             </div>
                             <div className="settings-row">
                                 <button onClick={deleteCookie} className="cookie-button">Delete Cookies</button>

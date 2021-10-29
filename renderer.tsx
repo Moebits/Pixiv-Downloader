@@ -34,6 +34,7 @@ export const MangaLimitContext = React.createContext<any>(null)
 export const UgoiraLimitContext = React.createContext<any>(null)
 export const TranslateTitlesContext = React.createContext<any>(null)
 export const RestrictContext = React.createContext<any>(null)
+export const MoeContext = React.createContext<any>(null)
 
 const App = () => {
   const [previewVisible, setPreviewVisible] = useState(false)
@@ -52,11 +53,13 @@ const App = () => {
   const [illustLimit, setIllustLimit] = useState(100)
   const [mangaLimit, setMangaLimit] = useState(25)
   const [ugoiraLimit, setUgoiraLimit] = useState(10)
-  const [translateTitles, setTranslateTitles] = useState(true)
+  const [translateTitles, setTranslateTitles] = useState(false)
   const [restrict, setRestrict] = useState("all")
+  const [moe, setMoe] = useState(false)
 
   return (
     <main className="app">
+      <MoeContext.Provider value={{moe, setMoe}}>
       <RestrictContext.Provider value={{restrict, setRestrict}}>
       <TranslateTitlesContext.Provider value={{translateTitles, setTranslateTitles}}>
       <TargetContext.Provider value={{target, setTarget}}>
@@ -104,6 +107,7 @@ const App = () => {
       </TargetContext.Provider>
       </TranslateTitlesContext.Provider>
       </RestrictContext.Provider>
+      </MoeContext.Provider>
     </main>
   )
 }
