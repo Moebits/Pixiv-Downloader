@@ -15,7 +15,6 @@ const ContextMenu: React.FunctionComponent = (props) => {
             if (!hover) setVisible(false)
         }
         window.oncontextmenu = async (event: MouseEvent) => {
-            await functions.timeout(50)
             setVisible(true)
             contextMenu.current!.style.left = `${event.x}px`
             contextMenu.current!.style.top = `${event.y}px`

@@ -1,6 +1,6 @@
 {
   "name": "pixiv-downloader",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "An app that downloads images/ugoira from Pixiv",
   "main": "dist/main.js",
   "scripts": {

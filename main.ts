@@ -266,8 +266,15 @@ ipcMain.handle("save-theme", (event, theme: string) => {
 })
 
 ipcMain.handle("install-update", async (event) => {
-  await autoUpdater.downloadUpdate()
-  autoUpdater.quitAndInstall()
+  if (process.platform === "darwin") {
+    const update = await autoUpdater.checkForUpdates()
+    const url = `${pack.repository.url}/releases/download/v${update.updateInfo.version}/${update.updateInfo.files[0].url}`
+    shell.openExternal(url)
+    app.quit()
+  } else {
+    await autoUpdater.downloadUpdate()
+    autoUpdater.quitAndInstall()
+  }
 })
 
 ipcMain.handle("check-for-updates", async (event, startup: boolean) => {
