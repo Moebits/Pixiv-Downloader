@@ -179,7 +179,7 @@ const IllustContainer: React.FunctionComponent<IllustContainerProps> = (props: I
 
     const preview = (event: React.MouseEvent<HTMLElement>) => {
         const source = getImage()
-        if (event.button === 2 && !drag) ipcRenderer.invoke("preview", source)
+        if (!drag) ipcRenderer.invoke("preview", source)
     }
 
     const delayPress = (event: React.MouseEvent<HTMLElement>) => {
@@ -195,7 +195,7 @@ const IllustContainer: React.FunctionComponent<IllustContainerProps> = (props: I
         <section ref={illustContainerRef} className="illust-wrap-container" onMouseOver={() => setHover(true)} onMouseEnter={mouseEnter} onMouseLeave={mouseLeave}>
             <div className="illust-container" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
             <div className="illust-img">
-                <img src={getImage()} onMouseDown={delayPress} onMouseUp={preview}/>
+                <img src={getImage()} onMouseDown={delayPress} onContextMenu={preview}/>
             </div>
             <div className="illust-middle">
                 <div className="illust-name">
