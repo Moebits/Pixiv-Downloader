@@ -32,7 +32,7 @@ const OptionsBar: React.FunctionComponent = (props) => {
 
     const handleKind = (kind: string) => {
         if (kind === "ugoira") {
-            if (format !== "gif" || format !== "zip") setFormat("gif")
+            if (format !== "gif" || format !== "zip" || format !== "webp") setFormat("gif")
         } else if (kind === "novel") {
             setFormat("txt")
         } else {
@@ -92,6 +92,7 @@ const OptionsBar: React.FunctionComponent = (props) => {
                 {kind === "ugoira" ? 
                 <DropdownButton title={format} drop="down">
                     <Dropdown.Item active={format === "gif"} onClick={() => setFormat("gif")}>gif</Dropdown.Item>
+                    <Dropdown.Item active={format === "webp"} onClick={() => setFormat("webp")}>webp</Dropdown.Item>
                     <Dropdown.Item active={format === "zip"} onClick={() => setFormat("zip")}>zip</Dropdown.Item>
                 </DropdownButton>
                 : kind === "novel" ?

@@ -15,6 +15,8 @@ import fs from "fs"
 import {URL} from "url"
 require('@electron/remote/main').initialize()
 
+let webpPath = path.join(app.getAppPath(), "../app.asar.unpacked/node_modules/pixiv.ts/webp")
+if (!fs.existsSync(webpPath)) webpPath = path.join(__dirname, "../webp")
 process.setMaxListeners(0)
 let window: Electron.BrowserWindow | null
 let website: Electron.BrowserWindow | null
@@ -154,7 +156,7 @@ ipcMain.handle("download", async (event, info: {id: number, illust: PixivIllust,
     // Download Ugoira
     const metadata = await pixiv.ugoira.get(illust.id).then((r) => r.ugoira_metadata)
     const zipUrl = metadata.zip_urls.medium
-    if (format === "gif") {
+    if (format === "gif" || format === "webp") {
       const frameFolder = path.join(folder, illust.id.toString())
       if (!fs.existsSync(frameFolder)) fs.mkdirSync(frameFolder, {recursive: true})
       active.push({id, dest, frameFolder, action: null})
@@ -177,7 +179,11 @@ ipcMain.handle("download", async (event, info: {id: number, illust: PixivIllust,
           frameArray = frameArray.reverse()
           delayArray = delayArray.reverse()
       }
-      await pixiv.util.encodeGif(frameArray, delayArray, dest)
+      if (format === "gif") {
+        await pixiv.util.encodeGif(frameArray, delayArray, dest)
+      } else if (format === "webp") {
+        await pixiv.util.encodeAnimatedWebp(frameArray, delayArray, dest, webpPath)
+      }
       functions.removeDirectory(frameFolder)
     } else if (format === "zip") {
       active.push({id, dest, action: null})
@@ -304,6 +310,9 @@ if (!singleLock) {
     window = new BrowserWindow({width: 800, height: 650, minWidth: 720, minHeight: 450, frame: false, backgroundColor: "#656ac2", center: true, webPreferences: {nodeIntegration: true, contextIsolation: false, webSecurity: false}})
     window.loadFile(path.join(__dirname, "index.html"))
     window.removeMenu()
+    if (process.platform === "darwin") {
+      fs.chmodSync(`${webpPath}/img2webp.app`, "777")
+    }
     require("@electron/remote/main").enable(window.webContents)
     window.on("close", () => {
       website?.close()

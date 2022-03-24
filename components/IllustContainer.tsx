@@ -170,7 +170,7 @@ const IllustContainer: React.FunctionComponent<IllustContainerProps> = (props: I
     }
 
     const getImage = () => {
-        if ((path.extname(output ?? "") === ".gif") && !deleted) {
+        if ((path.extname(output ?? "") === ".gif") || (path.extname(output ?? "") === ".webp") && !deleted) {
             return output
         } else {
             return props.illust.image_urls.large ? props.illust.image_urls.large : props.illust.image_urls.medium
