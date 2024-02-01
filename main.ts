@@ -15,7 +15,7 @@ import fs from "fs"
 import {URL} from "url"
 require('@electron/remote/main').initialize()
 
-let webpPath = path.join(app.getAppPath(), "../app.asar.unpacked/node_modules/pixiv.ts/webp")
+let webpPath = path.join(app.getAppPath(), "./node_modules/pixiv.ts/webp")
 if (!fs.existsSync(webpPath)) webpPath = path.join(__dirname, "../webp")
 process.setMaxListeners(0)
 let window: Electron.BrowserWindow | null
