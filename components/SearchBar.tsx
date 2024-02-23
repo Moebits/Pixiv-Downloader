@@ -96,7 +96,9 @@ const SearchBar: React.FunctionComponent = (props) => {
         const refreshToken = await ipcRenderer.invoke("get-refresh-token")
         if (!refreshToken) return ipcRenderer.invoke("download-error", "login")
         const pixiv = await Pixiv.refreshLogin(refreshToken)
-        const illustID = /\d{5,}/.test(query) ? Number(query.match(/\d{5,}/)?.[0]) : null
+        let illustID = /\d{5,}/.test(query) ? Number(query.match(/\d{5,}/)?.[0]) : null
+        if (!illustID) illustID = /\d{3,}/.test(query) ? Number(query.match(/\d{3,}/)?.[0]) : null
+        console.log(illustID)
         if (illustID) {
             if (/users/.test(query)) {
                 let illusts: PixivIllust[]
@@ -134,7 +136,8 @@ const SearchBar: React.FunctionComponent = (props) => {
                     const dest = await parseDest(illust, directory, newFormat)
                     ipcRenderer.invoke("download", {id: current, illust, dest, format, speed, reverse, template, translateTitles})
                     setID(prev => prev + 1)
-                } catch {
+                } catch (e) {
+                    console.log(e)
                     return ipcRenderer.invoke("download-error", "search")
                 }
             }

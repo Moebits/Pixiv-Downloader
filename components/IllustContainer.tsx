@@ -191,6 +191,16 @@ const IllustContainer: React.FunctionComponent<IllustContainerProps> = (props: I
         }
     }
 
+    const openPage = () => {
+        let url = `https://www.pixiv.net/en/artworks/${props.illust.id}`
+        if (props.illust.type === "novel") url = `https://www.pixiv.net/novel/show.php?id=${props.illust.id}`
+        ipcRenderer.invoke("open-url", url)
+    }
+
+    const openUser = () => {
+        ipcRenderer.invoke("open-url", `https://www.pixiv.net/en/users/${props.illust.user.id}`)
+    }
+
     return (
         <section ref={illustContainerRef} className="illust-wrap-container" onMouseOver={() => setHover(true)} onMouseEnter={mouseEnter} onMouseLeave={mouseLeave}>
             <div className="illust-container" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
@@ -199,10 +209,10 @@ const IllustContainer: React.FunctionComponent<IllustContainerProps> = (props: I
             </div>
             <div className="illust-middle">
                 <div className="illust-name">
-                    <p className="illust-text large hover" onMouseDown={(event) => event.stopPropagation()}><span onClick={() => ipcRenderer.invoke("open-url", `https://www.pixiv.net/en/artworks/${props.illust.id}`)}>{title}</span></p>
+                    <p className="illust-text large hover" onMouseDown={(event) => event.stopPropagation()}><span onClick={() => openPage()}>{title}</span></p>
                 </div>
                 <div className="illust-info">
-                    <p className="illust-text hover" onMouseDown={(event) => event.stopPropagation()}><span onClick={() => ipcRenderer.invoke("open-url", `https://www.pixiv.net/en/users/${props.illust.user.id}`)}>{props.illust.user.name}</span></p>
+                    <p className="illust-text hover" onMouseDown={(event) => event.stopPropagation()}><span onClick={() => openUser()}>{props.illust.user.name}</span></p>
                     <p className="illust-text left" onMouseDown={(event) => event.stopPropagation()}>{props.illust.width}x{props.illust.height}</p>
                 </div>
                 <div className="illust-stats">

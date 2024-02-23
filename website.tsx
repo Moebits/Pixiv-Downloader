@@ -30,7 +30,7 @@ const App: React.FunctionComponent = () => {
     return (
         <main className="app">
             <BrowserTitleBar/>
-            <webview id="webview" src="https://www.pixiv.net/"></webview>
+            <webview id="webview" src="https://www.pixiv.net/" partition="persist:webview-partition"></webview>
         </main>
     )
 }
