@@ -46,7 +46,7 @@ For better accuracy provide the tags in Japanese, but they will be automatically
 
 ### Installation
 
-Download the installer from the [releases](https://github.com/Tenpi/Pixiv-Downloader/releases) tab.
+Download the installer from the [releases](https://github.com/Moebits/Pixiv-Downloader/releases) tab.
 
 ### Bugs and Feature Requests
 
@@ -54,5 +54,5 @@ Open an issue on my GitHub repository.
 
 ### Also See
 
-- [Waifu2x-GUI](https://github.com/Tenpi/Waifu2x-GUI) for upscaling images
-- [Photo Viewer](https://github.com/Tenpi/Photo-Viewer) for editing images
+- [Waifu2x-GUI](https://github.com/Moebits/Waifu2x-GUI) for upscaling images
+- [Photo Viewer](https://github.com/Moebits/Photo-Viewer) for editing images
