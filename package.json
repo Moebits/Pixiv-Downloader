@@ -17,10 +17,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Tenpi/Pixiv-Downloader"
+    "url": "https://github.com/Moebits/Pixiv-Downloader"
   },
   "build": {
-    "appId": "com.tenpi.pixivdl",
+    "appId": "com.moebits.pixivdl",
     "productName": "Pixiv Downloader",
     "icon": "./assets/icon.png",
     "directories": {
@@ -71,16 +71,15 @@
     "publish": {
       "provider": "github",
       "repo": "Pixiv-Downloader",
-      "owner": "Tenpi",
+      "owner": "Moebits",
       "releaseType": "draft"
     },
     "asarUnpack": "node_modules/pixiv.ts",
     "asar": false
   },
-  "author": "Tenpi",
+  "author": "Moebits",
   "license": "MIT",
   "devDependencies": {
-    "@tenpi/tslint": "^1.1.0",
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
     "@types/unzipper": "^0.10.4",
