@@ -48,6 +48,13 @@ For better accuracy provide the tags in Japanese, but they will be automatically
 
 Download the installer from the [releases](https://github.com/Moebits/Pixiv-Downloader/releases) tab.
 
+### MacOS
+
+On MacOS unsigned applications won't open, run this to remove the quarantine flag.
+```
+xattr -d com.apple.quarantine /Applications/Pixiv\ Downloader.app
+```
+
 ### Bugs and Feature Requests
 
 Open an issue on my GitHub repository.
